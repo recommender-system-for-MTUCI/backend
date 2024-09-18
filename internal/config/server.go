@@ -13,5 +13,5 @@ type Server struct {
 }
 
 func (s Server) GetServerAddress() string {
-	return fmt.Sprintf("%s:%s", s.Host, s.Host)
+	return fmt.Sprintf("%s:%s", s.Host, s.Port)
 }

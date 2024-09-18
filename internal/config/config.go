@@ -4,12 +4,12 @@ type Config struct {
 	Server *Server
 }
 
-func New() *Config {
+func New() (*Config, error) {
 	cfg := &Config{
 		Server: &Server{
-			Host: "local",
+			Host: "localhost",
 			Port: "8080",
 		},
 	}
-	return cfg
+	return cfg, nil
 }
