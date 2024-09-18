@@ -2,11 +2,13 @@ package app
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 type Controller struct {
@@ -62,6 +64,31 @@ func (ctrl *Controller) configureMiddlewares() {
 			},
 		}),
 		middleware.Logger(),
+		middleware.TimeoutWithConfig(middleware.TimeoutConfig{
+			Skipper:      middleware.DefaultSkipper,
+			ErrorMessage: "many time, try again after some time",
+			OnTimeoutRouteErrorHandler: func(err error, c echo.Context) {
+				zap.Any("path", c.Path())
+			},
+			Timeout: time.Second * 7,
+		}),
+		// when will be add registration< need to change id for token
+		middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+			Skipper: middleware.DefaultSkipper,
+			Store: middleware.NewRateLimiterMemoryStoreWithConfig(
+				middleware.RateLimiterMemoryStoreConfig{Rate: rate.Limit(10), Burst: 30, ExpiresIn: 2 * time.Minute},
+			),
+			IdentifierExtractor: func(ctx echo.Context) (string, error) {
+				id := ctx.RealIP()
+				return id, nil
+			},
+			ErrorHandler: func(context echo.Context, err error) error {
+				return context.JSON(http.StatusForbidden, nil)
+			},
+			DenyHandler: func(context echo.Context, identifier string, err error) error {
+				return context.JSON(http.StatusTooManyRequests, nil)
+			},
+		}),
 	}
 
 	ctrl.server.Use(middlewares...)
