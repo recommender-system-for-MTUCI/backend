@@ -19,7 +19,7 @@ func ReccomendSystem() {
 		log.Fatal("Falied to initialize zap logger", zap.Error(err))
 	}
 	log.Info("Initilaze logger")
-	cfg, err = config.New()
+	cfg, err = config.LoadConfig()
 	if err != nil {
 		log.Fatal("Failed to initilize config", zap.Error(err))
 	}

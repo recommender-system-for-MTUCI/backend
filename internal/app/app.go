@@ -38,7 +38,7 @@ func (ctrl *Controller) configure() error {
 }
 
 func (ctrl *Controller) configureMiddlewares() {
-	// CORS configuration
+	// CORS configurations need change when frontend will be ready
 	var middlewares = []echo.MiddlewareFunc{
 		middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: []string{"*"},
@@ -72,7 +72,7 @@ func (ctrl *Controller) configureMiddlewares() {
 			},
 			Timeout: time.Second * 7,
 		}),
-		// when will be add registration< need to change id for token
+		// when will be add registration need to change id for token
 		middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
 			Skipper: middleware.DefaultSkipper,
 			Store: middleware.NewRateLimiterMemoryStoreWithConfig(

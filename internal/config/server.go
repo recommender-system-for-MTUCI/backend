@@ -2,14 +2,13 @@ package config
 
 import (
 	"fmt"
-	"time"
 )
 
 type Server struct {
 	Host string `yaml:"host"`
 	Port string `yaml:"port"`
 	//waiting ml for true time
-	Timeout time.Duration `yaml:"timeout"`
+	//Timeout time.Duration `yaml:"timeout"`
 	//need timeout for connection server
 }
 
