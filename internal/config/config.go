@@ -20,14 +20,11 @@ func NewConfig() (*Config, error) {
 			//Timeout: time.Second * 7,
 		},
 	}
-	return cfg, nil
+	cfg, err := loadConfig(cfg)
+	return cfg, err
 }
 
-func LoadConfig() (*Config, error) {
-	cfg, err := NewConfig()
-	if err != nil {
-		log.Fatal("Failed to create config")
-	}
+func loadConfig(cfg *Config) (*Config, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Printf("Failed to get home dir, using default config")

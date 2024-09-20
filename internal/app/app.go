@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -106,16 +107,19 @@ func (ctrl *Controller) handleFormSubmission(c echo.Context) error {
 	})
 }
 
-func (ctrl *Controller) Run() error {
-	//ctx, cancel := context.WithCancel(c)
-	//go func() {
-	//	ctrl.log.Info("starting HTTP server on address", zap.String("", ctrl.cfg.Server.GetServerAddress()))
-	//	err := ctrl.server.Start(ctrl.cfg.Server.GetServerAddress())
-	//	if err != nil {
-	//		cancel()
-	//	}
-	//}()
-	err := ctrl.server.Start(ctrl.cfg.Server.GetServerAddress())
-	ctrl.log.Info(ctrl.cfg.Server.GetServerAddress())
-	return err
+func (ctrl *Controller) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	go func() {
+		ctrl.log.Info("starting HTTP server on address", zap.String("", ctrl.cfg.Server.GetServerAddress()))
+		err := ctrl.server.Start(ctrl.cfg.Server.GetServerAddress())
+		if err != nil {
+			cancel()
+		}
+	}()
+	return ctx.Err()
+}
+
+func (ctrl *Controller) ShutDown(ctx context.Context) error {
+	return ctrl.server.Shutdown(ctx)
 }
