@@ -10,14 +10,19 @@ import (
 
 type Config struct {
 	Server *Server
+	JWT    *JWT
 }
 
 func NewConfig() (*Config, error) {
 	cfg := &Config{
 		Server: &Server{
-			Host: "localhost",
+			Host: "0.0.0.0",
 			Port: "8080",
 			//Timeout: time.Second * 7,
+		},
+		JWT: &JWT{
+			AccsesTokenLifetime:  5,
+			RefreshTokenLifetime: 10000,
 		},
 	}
 	cfg, err := loadConfig(cfg)

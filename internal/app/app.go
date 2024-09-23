@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
@@ -90,6 +91,11 @@ func (ctrl *Controller) configureMiddlewares() {
 				return context.JSON(http.StatusTooManyRequests, nil)
 			},
 		}),
+		middleware.RequestIDWithConfig(middleware.RequestIDConfig{
+			Skipper:      middleware.DefaultSkipper,
+			Generator:    uuid.NewString,
+			TargetHeader: echo.HeaderXRequestID,
+		}),
 	}
 
 	ctrl.server.Use(middlewares...)
@@ -98,13 +104,7 @@ func (ctrl *Controller) configureMiddlewares() {
 func (ctrl *Controller) configureRouters() {
 	// Define routes
 	app := ctrl.server.Group("/app")
-	app.GET("/hi", ctrl.handleFormSubmission)
-}
-
-func (ctrl *Controller) handleFormSubmission(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "Form submitted successfully!",
-	})
+	app.POST("/registration", ctrl.handleRegistration)
 }
 
 func (ctrl *Controller) Run(ctx context.Context) error {
