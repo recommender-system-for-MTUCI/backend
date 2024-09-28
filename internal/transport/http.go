@@ -37,14 +37,16 @@ func ReccomendSystem() {
 	}
 	log.Info("Initialize config", zap.Any("config", cfg))
 
-	provider, err := jwt.NewProvider(cfg.JWT, log)
+	prov, err := jwt.NewProvider(cfg.JWT, log)
 	if err != nil {
-		log.Fatal("Failed to initialize provider", zap.Error(err))
+		log.Fatal("Failed to create jwt provider", zap.Error(err))
 	}
 	id, err := uuid.NewUUID()
-	if err != nil {
-		got, err := provider.CreateTokenForUser(id, false)
+	if err == nil {
+		got, err := prov.CreateTokenForUser(id, false)
 		log.Info("generated token", zap.String("token", got), zap.Error(err))
+		parsed, err := prov.GetDataFromToken(got)
+		log.Info("parsed from token", zap.String("token", parsed.String()), zap.Error(err))
 	}
 
 	server, err = app.New(log, cfg)

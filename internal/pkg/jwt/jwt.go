@@ -34,7 +34,7 @@ func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
 	}
 	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(pubKey)
 	if err != nil {
-		return nil, fmt.Errorf("error while parse private key")
+		return nil, fmt.Errorf("error while parse public key")
 	}
 	log.Info("public key", zap.ByteString("public key", pubKey))
 	provider := &Provider{
@@ -81,15 +81,15 @@ func (provider *Provider) CreateTokenForUser(userID uuid.UUID, isAccess bool) (s
 }
 
 func (provider *Provider) GetDataFromToken(token string) (uuid.UUID, error) {
-	parsedToken, err := jwt.Parse(token, provider.readKeyFunc)
+	parsedToken, err := jwt.ParseWithClaims(token, &jwt.RegisteredClaims{}, provider.readKeyFunc)
 	if err != nil {
 		return uuid.Nil, err
 	}
 	if !parsedToken.Valid {
-		return uuid.Nil, fmt.Errorf("invalid token")
+		return uuid.Nil, fmt.Errorf("invalid token: not valid")
 	}
 	if claims, ok := parsedToken.Claims.(*jwt.RegisteredClaims); ok {
 		return uuid.Parse(claims.Issuer)
 	}
-	return uuid.Nil, fmt.Errorf("invalid token")
+	return uuid.Nil, fmt.Errorf("invalid token: cannot parse claims")
 }
