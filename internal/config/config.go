@@ -14,6 +14,10 @@ type Config struct {
 }
 
 func NewConfig() (*Config, error) {
+	//wd, err := os.Getwd()
+	//if err != nil {
+	//	return nil, err
+	//}
 	cfg := &Config{
 		Server: &Server{
 			Host: "0.0.0.0",
@@ -23,9 +27,15 @@ func NewConfig() (*Config, error) {
 		JWT: &JWT{
 			AccsesTokenLifetime:  5,
 			RefreshTokenLifetime: 10000,
+			PublicKeyPath:        "/home/relationskatie/recjmmendSystem/certs/public.pem",
+			PrivateKeyPath:       "/home/relationskatie/recjmmendSystem/certs/key.pem",
 		},
 	}
 	cfg, err := loadConfig(cfg)
+	if err != nil {
+		log.Fatal("failed to load config")
+	}
+
 	return cfg, err
 }
 

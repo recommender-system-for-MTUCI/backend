@@ -5,8 +5,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/google/uuid"
 	"github.com/recommender-system-for-MTUCI/backend/internal/app"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
+	"github.com/recommender-system-for-MTUCI/backend/internal/pkg/jwt"
 	"go.uber.org/zap"
 )
 
@@ -34,6 +36,16 @@ func ReccomendSystem() {
 		log.Fatal("Failed to initilize config", zap.Error(err))
 	}
 	log.Info("Initialize config", zap.Any("config", cfg))
+
+	provider, err := jwt.NewProvider(cfg.JWT, log)
+	if err != nil {
+		log.Fatal("Failed to initialize provider", zap.Error(err))
+	}
+	id, err := uuid.NewUUID()
+	if err != nil {
+		got, err := provider.CreateTokenForUser(id, false)
+		log.Info("generated token", zap.String("token", got), zap.Error(err))
+	}
 
 	server, err = app.New(log, cfg)
 	if err != nil {
