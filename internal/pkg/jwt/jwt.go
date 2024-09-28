@@ -9,6 +9,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
+	"github.com/recommender-system-for-MTUCI/backend/internal/models"
 	"go.uber.org/zap"
 )
 
@@ -17,6 +18,11 @@ type Provider struct {
 	privateKey           *rsa.PrivateKey
 	accessTokenLifetime  int
 	refreshTokenLifetime int
+}
+
+type CustomClaims struct {
+	jwt.RegisteredClaims
+	IsAccess bool
 }
 
 func NewProvider(cfg *config.JWT, log *zap.Logger) (*Provider, error) {
@@ -70,26 +76,39 @@ func (provider *Provider) CreateTokenForUser(userID uuid.UUID, isAccess bool) (s
 		add = time.Duration(provider.refreshTokenLifetime) * time.Minute
 	}
 
-	claims := jwt.RegisteredClaims{
-		Issuer:    userID.String(),
-		IssuedAt:  jwt.NewNumericDate(now),
-		NotBefore: jwt.NewNumericDate(now),
-		ExpiresAt: jwt.NewNumericDate(now.Add(add)),
+	claims := &CustomClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    userID.String(),
+			IssuedAt:  jwt.NewNumericDate(now),
+			NotBefore: jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(add)),
+		},
+		IsAccess: isAccess,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	return token.SignedString(provider.privateKey)
 }
 
-func (provider *Provider) GetDataFromToken(token string) (uuid.UUID, error) {
-	parsedToken, err := jwt.ParseWithClaims(token, &jwt.RegisteredClaims{}, provider.readKeyFunc)
+func (provider *Provider) GetDataFromToken(token string) (*models.UserDataInToken, error) {
+	parsedToken, err := jwt.ParseWithClaims(token, &CustomClaims{}, provider.readKeyFunc)
 	if err != nil {
-		return uuid.Nil, err
+		return nil, err
 	}
 	if !parsedToken.Valid {
-		return uuid.Nil, fmt.Errorf("invalid token: not valid")
+		return nil, fmt.Errorf("invalid token: not valid")
 	}
-	if claims, ok := parsedToken.Claims.(*jwt.RegisteredClaims); ok {
-		return uuid.Parse(claims.Issuer)
+	claims, ok := parsedToken.Claims.(*CustomClaims)
+	if !ok {
+		return nil, fmt.Errorf("invalid token: cannot parse claim")
 	}
-	return uuid.Nil, fmt.Errorf("invalid token: cannot parse claims")
+	var parsedID uuid.UUID
+
+	parsedID, err = uuid.Parse(claims.Issuer)
+	if err != nil {
+		return nil, err
+	}
+	return &models.UserDataInToken{
+		ID:       parsedID,
+		IsAccess: claims.IsAccess,
+	}, nil
 }

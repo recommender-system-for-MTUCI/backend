@@ -5,7 +5,6 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/google/uuid"
 	"github.com/recommender-system-for-MTUCI/backend/internal/app"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
 	"github.com/recommender-system-for-MTUCI/backend/internal/pkg/jwt"
@@ -41,15 +40,8 @@ func ReccomendSystem() {
 	if err != nil {
 		log.Fatal("Failed to create jwt provider", zap.Error(err))
 	}
-	id, err := uuid.NewUUID()
-	if err == nil {
-		got, err := prov.CreateTokenForUser(id, false)
-		log.Info("generated token", zap.String("token", got), zap.Error(err))
-		parsed, err := prov.GetDataFromToken(got)
-		log.Info("parsed from token", zap.String("token", parsed.String()), zap.Error(err))
-	}
 
-	server, err = app.New(log, cfg)
+	server, err = app.New(log, cfg, prov)
 	if err != nil {
 		log.Fatal("Failed to initialize server", zap.Error(err))
 	}
