@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
 	"github.com/recommender-system-for-MTUCI/backend/internal/pkg"
+	"github.com/recommender-system-for-MTUCI/backend/internal/storage"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
@@ -19,18 +20,21 @@ type Controller struct {
 	log           *zap.Logger
 	cfg           *config.Config
 	tokenProvider pkg.Provider
+	repo          storage.Storage
 }
 
-func New(log *zap.Logger, cfg *config.Config, tokenProvider pkg.Provider) (*Controller, error) {
+func New(log *zap.Logger, cfg *config.Config, tokenProvider pkg.Provider, repo storage.Storage) (*Controller, error) {
 	log.Info("Initializing server")
 	ctrl := &Controller{
 		server:        echo.New(),
 		log:           log,
 		cfg:           cfg,
 		tokenProvider: tokenProvider,
+		repo:          repo,
 	}
 	err := ctrl.configure()
 	if err != nil {
+		ctrl.log.Error("got error when configure server")
 		return nil, err
 	}
 	return ctrl, nil

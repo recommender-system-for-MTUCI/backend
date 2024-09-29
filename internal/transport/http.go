@@ -8,6 +8,7 @@ import (
 	"github.com/recommender-system-for-MTUCI/backend/internal/app"
 	"github.com/recommender-system-for-MTUCI/backend/internal/config"
 	"github.com/recommender-system-for-MTUCI/backend/internal/pkg/jwt"
+	"github.com/recommender-system-for-MTUCI/backend/internal/storage"
 	"go.uber.org/zap"
 )
 
@@ -18,6 +19,7 @@ func ReccomendSystem() {
 		err    error
 		cfg    *config.Config
 		ctx    context.Context
+		repo   storage.Storage
 	)
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGHUP,
@@ -41,7 +43,7 @@ func ReccomendSystem() {
 		log.Fatal("Failed to create jwt provider", zap.Error(err))
 	}
 
-	server, err = app.New(log, cfg, prov)
+	server, err = app.New(log, cfg, prov, repo)
 	if err != nil {
 		log.Fatal("Failed to initialize server", zap.Error(err))
 	}
